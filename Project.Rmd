@@ -1,0 +1,92 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+ 
+
+```{r}
+## I cleaned out the data and reduced, because when it came to OFNS_DESC, it had
+## many levels and she told me to reduce it to only 3 levels instead.
+NYPD_Complaint_Data_Historic <- read.csv("/Users/nickzelada/Desktop/Grad 2/STA/Project/CrimeFiltered.csv")
+```
+
+```{r}
+crime1 = data.frame(NYPD_Complaint_Data_Historic)
+```
+
+
+```{r}
+## Factoring
+crime1$VIC_SEX=factor(crime1$VIC_SEX)
+crime1$VIC_RACE=factor(crime1$VIC_RACE)
+crime1$VIC_AGE_GROUP=factor(crime1$VIC_AGE_GROUP)
+crime1$STATION_NAME=factor(crime1$STATION_NAME)
+crime1$PATROL_BORO=factor(crime1$PATROL_BORO)
+crime1$Lat_Lon=factor(crime1$Lat_Lon)
+crime1$SUSP_SEX=factor(crime1$SUSP_SEX)
+crime1$SUSP_RACE=factor(crime1$SUSP_RACE)
+crime1$SUSP_AGE_GROUP=factor(crime1$SUSP_AGE_GROUP)
+crime1$HOUSING_PSA=factor(crime1$HOUSING_PSA)
+crime1$HADEVELOPT=factor(crime1$HADEVELOPT)
+crime1$PARKS_NM=factor(crime1$PARKS_NM)
+crime1$JURIS_DESC=factor(crime1$JURIS_DESC)
+crime1$PREM_TYP_DESC=factor(crime1$PREM_TYP_DESC)
+crime1$LOC_OF_OCCUR_DESC=factor(crime1$LOC_OF_OCCUR_DESC)
+crime1$BORO_NM=factor(crime1$BORO_NM)
+crime1$LAW_CAT_CD=factor(crime1$LAW_CAT_CD)
+crime1$CRM_ATPT_CPTD_CD=factor(crime1$CRM_ATPT_CPTD_CD)
+crime1$PD_DESC=factor(crime1$PD_DESC)
+crime1$OFNS_DESC=factor(crime1$OFNS_DESC)
+crime1$RPT_DT=factor(crime1$RPT_DT)
+crime1$CMPLNT_TO_TM=factor(crime1$CMPLNT_TO_TM)
+crime1$CMPLNT_TO_DT=factor(crime1$CMPLNT_TO_DT)
+crime1$CMPLNT_FR_DT=factor(crime1$CMPLNT_FR_DT)
+crime1$CMPLNT_FR_TM=factor(crime1$CMPLNT_FR_TM)
+## Using BORA_NM, so we convert it as numeric.
+crime1$BORO_NM=as.numeric(crime1$BORO_NM)
+```
+
+
+
+```{r}
+
+lm1 = lm(BORO_NM ~ VIC_SEX + OFNS_DESC + VIC_RACE + SUSP_SEX + 
+    PREM_TYP_DESC  + PD_CD + CRM_ATPT_CPTD_CD + JURIS_DESC + 
+    TRANSIT_DISTRICT + CMPLNT_NUM+LOC_OF_OCCUR_DESC+SUSP_RACE+VIC_AGE_GROUP+SUSP_AGE_GROUP
+    +ADDR_PCT_CD+CRM_ATPT_CPTD_CD+LAW_CAT_CD+Latitude+Longitude,data = crime1)
+summary(lm1)
+```
+```{r}
+library(MASS)
+step(lm1, direction="both")
+## Looking for the best regression.
+```
+```{r}
+## This was the best regression.
+## The dependent variable is BORO_NM, which are the boroughs of NYC. Bronx, 
+## Manhattan, Brooklyn, Queens, and Staten Island. Our independent variables
+## are OFNS_DESC (Description of offense), PD_CD (classification code),
+## CRM_ATPT_CPTD_CD (whether crime was successfully completed or attempted),
+## TRANSIT_DISTRICT (Transit district in which the offense occurred),
+## LOC_OF_OCCUR_DESC (location of occurrence in or around the premises)
+## SUSP_AGE_GROUP (Suspect’s Age Group), ADDR_PCT_CD (precinct in which the 
+## incident occurred), Latitude and Longitude
+lm6=lm(BORO_NM ~ OFNS_DESC + PD_CD + CRM_ATPT_CPTD_CD + 
+    TRANSIT_DISTRICT + LOC_OF_OCCUR_DESC + SUSP_AGE_GROUP + ADDR_PCT_CD + 
+    Latitude + Longitude,data=crime1)
+summary(lm6)
+```
+```{r}
+Y_pr_tr=predict(lm6, data=crime1)
+err.tr=mean((crime1$BORO_NM-Y_pr_tr)^2)
+err.tr
+## Mean square error
+```
+```{r}
+qqnorm(lm6$residuals)
+qqline(lm6$residuals)
+## The normality of the data looks pretty normal.
+```
